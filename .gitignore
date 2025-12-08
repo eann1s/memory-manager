@@ -1,0 +1,42 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.ncframework
+*.framework
+*.framework.dSYM
+*.app.dSYM
+*.app
+*.test
+*.plugin
+*.mo
+*.ot
+*.obj
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go build command.
+bin/
+vendor/
+
+# intellij files
+*.iml
+out/
+.idea/
+*.ipr
+*.iws
+*.iml
+modules.xml
+
+# osx/tvOS/darwin (generated file)
+*.pbxuser
+
+# misc
+build.log
+*.log
+*.tmp
+*.tmp~
+__pycache__/
