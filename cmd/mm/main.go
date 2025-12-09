@@ -1,15 +1,31 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/eann1s/codex-memory-manager/internal/config"
+	"github.com/eann1s/codex-memory-manager/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	cfg := config.Load()
+
+	ctx := context.Background()
+
+	db, err := store.NewDB(ctx, cfg.DBURL)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Pool.Close()
+
+	err = db.Pool.Ping(ctx)
+	if err != nil {
+		log.Fatalf("failed to ping database: %v", err)
+	}
+	log.Default().Printf("Connected to database: %s", cfg.DBURL)
 
 	router := newRouter()
 

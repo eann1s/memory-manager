@@ -40,3 +40,10 @@ build.log
 *.tmp
 *.tmp~
 __pycache__/
+
+# env
+.env
+.env.local
+.env.dev
+.env.prod
+
