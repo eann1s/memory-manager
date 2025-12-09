@@ -1,55 +1,47 @@
-package config_test
+package config
 
-  import (
-      "testing"
+import "testing"
 
-      "github.com/eann1s/codex-memory-manager/internal/config"
-  )
+func TestLoad(t *testing.T) {
+	t.Setenv("HTTP_PORT", ":9000")
+	t.Setenv("DB_URL", "postgres://localhost:5432/db")
+	t.Setenv("OPENAI_API_KEY", "test-key")
+	t.Setenv("OPENAI_BASE_URL", "https://example.com")
 
-  func TestLoad(t *testing.T) {
-      cases := []struct {
-          name        string
-          env         map[string]string
-          wantPort    string
-          wantDBURL   string
-          wantBaseURL string
-      }{
-          {
-              name:        "defaults",
-              env:         nil,
-              wantPort:    ":8080",
-              wantDBURL:   "",
-              wantBaseURL: "https://api.openai.com/v1",
-          },
-          {
-              name: "overrides",
-              env: map[string]string{
-                  "HTTP_PORT":      ":9000",
-                  "DB_URL":         "postgres://foo",
-                  "OPENAI_BASE_URL": "https://custom",
-              },
-              wantPort:    ":9000",
-              wantDBURL:   "postgres://foo",
-              wantBaseURL: "https://custom",
-          },
-      }
+	cfg := Load()
 
-      for _, tc := range cases {
-          t.Run(tc.name, func(t *testing.T) {
-              for k, v := range tc.env {
-                  t.Setenv(k, v)
-              }
+	if cfg.HTTPPort != ":9000" {
+		t.Errorf("expected HTTPPort to be ':9000', got %s", cfg.HTTPPort)
+	}
+	if cfg.DBURL != "postgres://localhost:5432/db" {
+		t.Errorf("expected DBURL to be 'postgres://localhost:5432/db', got %s", cfg.DBURL)
+	}
+	if cfg.OpenAIAPIKey != "test-key" {
+		t.Errorf("expected OpenAIAPIKey to be 'test-key', got %s", cfg.OpenAIAPIKey)
+	}
+	if cfg.OpenAIBaseURL != "https://example.com" {
+		t.Errorf("expected OpenAIBaseURL to be 'https://example.com', got %s", cfg.OpenAIBaseURL)
+	}
+}
 
-              cfg := config.Load()
-              if cfg.HTTPPort != tc.wantPort {
-                  t.Fatalf("HTTPPort = %q, want %q", cfg.HTTPPort, tc.wantPort)
-              }
-              if cfg.DBURL != tc.wantDBURL {
-                  t.Fatalf("DBURL = %q, want %q", cfg.DBURL, tc.wantDBURL)
-              }
-              if cfg.OpenAIBaseURL != tc.wantBaseURL {
-                  t.Fatalf("OpenAIBaseURL = %q, want %q", cfg.OpenAIBaseURL, tc.wantBaseURL)
-              }
-          })
-      }
-  }
+func TestLoadDefaults(t *testing.T) {
+	t.Setenv("HTTP_PORT", "")
+	t.Setenv("DB_URL", "")
+	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("OPENAI_BASE_URL", "")
+
+	cfg := Load()
+
+	if cfg.HTTPPort != ":8080" {
+		t.Errorf("expected default HTTPPort to be ':8080', got %s", cfg.HTTPPort)
+	}
+	if cfg.DBURL != "" {
+		t.Errorf("expected default DBURL to be empty, got %s", cfg.DBURL)
+	}
+	if cfg.OpenAIAPIKey != "" {
+		t.Errorf("expected default OpenAIAPIKey to be empty, got %s", cfg.OpenAIAPIKey)
+	}
+	if cfg.OpenAIBaseURL != "https://api.openai.com/v1" {
+		t.Errorf("expected default OpenAIBaseURL to be 'https://api.openai.com/v1', got %s", cfg.OpenAIBaseURL)
+	}
+}
