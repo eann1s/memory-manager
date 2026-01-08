@@ -1,4 +1,4 @@
-.PHONY: test test-integration db-start db-migrate db-reset help
+.PHONY: test test-integration test-openai db-start db-migrate db-reset help
 
 help:
 	@echo "Available targets:"
@@ -7,6 +7,7 @@ help:
 	@echo "  make db-reset          - Drop all data and re-run migrations"
 	@echo "  make test              - Run all tests"
 	@echo "  make test-integration  - Run integration tests only"
+	@echo "  make test-openai       - Run OpenAI integration tests (requires OPENAI_API_KEY)"
 
 db-start:
 	docker-compose -f docker-compose.local.yml up -d db
@@ -25,3 +26,6 @@ test:
 
 test-integration:
 	go test -v ./internal/store -run "^Test"
+
+test-openai:
+	RUN_OPENAI_INTEGRATION=1 go test -v ./internal/openai -run TestEmbed_Integration

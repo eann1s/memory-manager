@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestLoad(t *testing.T) {
 	t.Setenv("HTTP_PORT", ":9000")
@@ -11,6 +14,9 @@ func TestLoad(t *testing.T) {
 	t.Setenv("DB_NAME", "dbname")
 	t.Setenv("OPENAI_API_KEY", "test-key")
 	t.Setenv("OPENAI_BASE_URL", "https://example.com")
+	t.Setenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
+	t.Setenv("OPENAI_TIMEOUT", "60")
+	t.Setenv("EMBEDDING_DIM", "768")
 
 	cfg := Load()
 
@@ -40,6 +46,15 @@ func TestLoad(t *testing.T) {
 	}
 	if cfg.OpenAIBaseURL != "https://example.com" {
 		t.Errorf("expected OpenAIBaseURL to be 'https://example.com', got %s", cfg.OpenAIBaseURL)
+	}
+	if cfg.OpenAIEmbeddingModel != "text-embedding-ada-002" {
+		t.Errorf("expected OpenAIEmbeddingModel to be 'text-embedding-ada-002', got %s", cfg.OpenAIEmbeddingModel)
+	}
+	if cfg.OpenAITimeout != 60*time.Second {
+		t.Errorf("expected OpenAITimeout to be 60s, got %s", cfg.OpenAITimeout)
+	}
+	if cfg.EmbeddingDim != 768 {
+		t.Errorf("expected EmbeddingDim to be 768, got %d", cfg.EmbeddingDim)
 	}
 }
 
@@ -81,5 +96,14 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.OpenAIBaseURL != "https://api.openai.com/v1" {
 		t.Errorf("expected default OpenAIBaseURL to be 'https://api.openai.com/v1', got %s", cfg.OpenAIBaseURL)
+	}
+	if cfg.OpenAIEmbeddingModel != "text-embedding-3-small" {
+		t.Errorf("expected default OpenAIEmbeddingModel to be 'text-embedding-3-small', got %s", cfg.OpenAIEmbeddingModel)
+	}
+	if cfg.OpenAITimeout != 30*time.Second {
+		t.Errorf("expected default OpenAITimeout to be 30s, got %s", cfg.OpenAITimeout)
+	}
+	if cfg.EmbeddingDim != 1536 {
+		t.Errorf("expected default EmbeddingDim to be 1536, got %d", cfg.EmbeddingDim)
 	}
 }
