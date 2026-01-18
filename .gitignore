@@ -21,6 +21,7 @@
 # Output of the go build command.
 bin/
 vendor/
+/mm
 
 # intellij files
 *.iml
@@ -47,3 +48,4 @@ __pycache__/
 .env.dev
 .env.prod
 
+.claude/

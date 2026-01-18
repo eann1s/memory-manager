@@ -4,8 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/eann1s/codex-memory-manager/internal/api"
 	"github.com/eann1s/codex-memory-manager/internal/config"
+	"github.com/eann1s/codex-memory-manager/internal/core"
+	"github.com/eann1s/codex-memory-manager/internal/openai"
 	"github.com/eann1s/codex-memory-manager/internal/store"
 	"github.com/go-chi/chi/v5"
 )
@@ -25,17 +29,41 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to ping database: %v", err)
 	}
-	log.Default().Printf("Connected to database: %s", cfg.DBURL)
+	log.Printf("Connected to database")
 
-	router := newRouter()
+	repos := store.NewRepos(db.Pool)
+
+	embeddingProvider, err := openai.NewEmbeddingProvider(cfg)
+	if err != nil {
+		log.Fatalf("failed to initialize embedding provider: %v", err)
+	}
+
+	pipeline := core.NewWritePipeline(repos, embeddingProvider, core.WritePipelineConfig{
+		ImportanceThreshold: cfg.MemoryImportanceThreshold,
+		MaxContentLen:       cfg.MemoryMaxContentLen,
+		ExpectedDim:         cfg.EmbeddingDim,
+	})
+
+	handler := api.NewHandler(pipeline, cfg.WriteMaxItems)
+
+	router := newRouter(handler)
+
+	server := &http.Server{
+		Addr:              cfg.HTTPPort,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 
 	log.Printf("Memory Manager listening on %s", cfg.HTTPPort)
-	if err := http.ListenAndServe(cfg.HTTPPort, router); err != nil {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}
 }
 
-func newRouter() http.Handler {
+func newRouter(handler *api.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +71,10 @@ func newRouter() http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+
+	if handler != nil {
+		r.Post("/v1/write", handler.Write)
+	}
 
 	return r
 }
