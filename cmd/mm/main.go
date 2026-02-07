@@ -38,13 +38,20 @@ func main() {
 		log.Fatalf("failed to initialize embedding provider: %v", err)
 	}
 
-	pipeline := core.NewWritePipeline(repos, embeddingProvider, core.WritePipelineConfig{
+	writePipeline := core.NewWritePipeline(repos, embeddingProvider, core.WritePipelineConfig{
 		ImportanceThreshold: cfg.MemoryImportanceThreshold,
 		MaxContentLen:       cfg.MemoryMaxContentLen,
 		ExpectedDim:         cfg.EmbeddingDim,
 	})
 
-	handler := api.NewHandler(pipeline, cfg.WriteMaxItems)
+	readPipeline := core.NewReadPipeline(repos, embeddingProvider, core.ReadPipelineConfig{
+		ImportanceThreshold: cfg.MemoryImportanceThreshold,
+		MaxQueryLen:         cfg.ReadMaxQueryLen,
+		MaxItems:            cfg.ReadMaxItems,
+		ExpectedDim:         cfg.EmbeddingDim,
+	})
+
+	handler := api.NewHandler(writePipeline, readPipeline, cfg.WriteMaxItems)
 
 	router := newRouter(handler)
 
@@ -74,6 +81,7 @@ func newRouter(handler *api.Handler) http.Handler {
 
 	if handler != nil {
 		r.Post("/v1/write", handler.Write)
+		r.Post("/v1/read", handler.Read)
 	}
 
 	return r

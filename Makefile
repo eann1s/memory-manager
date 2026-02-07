@@ -1,4 +1,4 @@
-.PHONY: test test-integration test-openai db-start db-migrate db-reset help
+.PHONY: test test-unit test-integration test-openai db-start db-migrate db-reset help
 
 help:
 	@echo "Available targets:"
@@ -6,7 +6,8 @@ help:
 	@echo "  make db-migrate        - Run database migrations"
 	@echo "  make db-reset          - Drop all data and re-run migrations"
 	@echo "  make test              - Run all tests"
-	@echo "  make test-integration  - Run integration tests only"
+	@echo "  make test-unit         - Run unit tests only (no DB required)"
+	@echo "  make test-integration  - Run DB integration tests (requires RUN_DB_INTEGRATION=1)"
 	@echo "  make test-openai       - Run OpenAI integration tests (requires OPENAI_API_KEY)"
 
 db-start:
@@ -24,8 +25,12 @@ db-reset:
 test:
 	go test -v ./...
 
+test-unit:
+	go test -v ./internal/core/... ./internal/openai/...
+
 test-integration:
-	go test -v ./internal/store -run "^Test"
+	RUN_DB_INTEGRATION=1 go test -v ./internal/store/... ./internal/api/...
 
 test-openai:
-	RUN_OPENAI_INTEGRATION=1 go test -v ./internal/openai -run TestEmbed_Integration
+	RUN_DB_INTEGRATION=1 RUN_OPENAI_INTEGRATION=1 go test -v ./internal/openai -run TestEmbed_Integration
+	RUN_DB_INTEGRATION=1 RUN_OPENAI_INTEGRATION=1 go test -v ./internal/api -run WithRealOpenAI

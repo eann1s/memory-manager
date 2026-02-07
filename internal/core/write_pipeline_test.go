@@ -33,8 +33,9 @@ func (m *mockUserRepo) GetOrCreate(ctx context.Context, tenantID int64, appID in
 }
 
 type mockMemoryRepo struct {
-	insertFunc    func(ctx context.Context, memory *Memory) error
-	listByUserFunc func(ctx context.Context, tenantID int64, appID int64, userID int64, limit int) ([]*Memory, error)
+	insertFunc            func(ctx context.Context, memory *Memory) error
+	listByUserFunc        func(ctx context.Context, tenantID int64, appID int64, userID int64, limit int) ([]*Memory, error)
+	searchByEmbeddingFunc func(ctx context.Context, tenantID int64, appID int64, userID int64, embedding []float32, limit int, types []string) ([]*Memory, error)
 }
 
 func (m *mockMemoryRepo) Insert(ctx context.Context, memory *Memory) error {
@@ -43,6 +44,13 @@ func (m *mockMemoryRepo) Insert(ctx context.Context, memory *Memory) error {
 
 func (m *mockMemoryRepo) ListByUser(ctx context.Context, tenantID int64, appID int64, userID int64, limit int) ([]*Memory, error) {
 	return m.listByUserFunc(ctx, tenantID, appID, userID, limit)
+}
+
+func (m *mockMemoryRepo) SearchByEmbedding(ctx context.Context, tenantID int64, appID int64, userID int64, embedding []float32, limit int, types []string) ([]*Memory, error) {
+	if m.searchByEmbeddingFunc != nil {
+		return m.searchByEmbeddingFunc(ctx, tenantID, appID, userID, embedding, limit, types)
+	}
+	return nil, nil
 }
 
 type mockEventRepo struct {

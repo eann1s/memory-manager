@@ -19,6 +19,7 @@ type UserRepo interface {
 type MemoryRepo interface {
 	Insert(ctx context.Context, memory *Memory) error
 	ListByUser(ctx context.Context, tenantID int64, appID int64, userID int64, limit int) ([]*Memory, error)
+	SearchByEmbedding(ctx context.Context, tenantID int64, appID int64, userID int64, embedding []float32, limit int, types []string) ([]*Memory, error)
 }
 
 type EventRepo interface {

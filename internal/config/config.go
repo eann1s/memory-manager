@@ -24,6 +24,8 @@ type Config struct {
 	MemoryImportanceThreshold  float32
 	MemoryMaxContentLen        int
 	WriteMaxItems              int
+	ReadMaxItems               int
+	ReadMaxQueryLen            int
 }
 
 func Load() *Config {
@@ -79,6 +81,20 @@ func Load() *Config {
 		}
 	}
 
+	readMaxItems := 50
+	if readMaxItemsStr := os.Getenv("READ_MAX_ITEMS"); readMaxItemsStr != "" {
+		if m, err := strconv.Atoi(readMaxItemsStr); err == nil && m > 0 {
+			readMaxItems = m
+		}
+	}
+
+	readMaxQueryLen := 10000
+	if readMaxQueryLenStr := os.Getenv("READ_MAX_QUERY_LEN"); readMaxQueryLenStr != "" {
+		if l, err := strconv.Atoi(readMaxQueryLenStr); err == nil && l > 0 {
+			readMaxQueryLen = l
+		}
+	}
+
 	return &Config{
 		HTTPPort:                  getEnv("HTTP_PORT", ":8080"),
 		DBHost:                    DBHost,
@@ -95,6 +111,8 @@ func Load() *Config {
 		MemoryImportanceThreshold: importanceThreshold,
 		MemoryMaxContentLen:       maxContentLen,
 		WriteMaxItems:             maxItems,
+		ReadMaxItems:              readMaxItems,
+		ReadMaxQueryLen:           readMaxQueryLen,
 	}
 }
 
